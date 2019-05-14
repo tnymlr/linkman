@@ -50,7 +50,7 @@ func SimpleAdd(path string, store links.Store, t *testing.T) {
 		url,
 	})
 
-	if links, err := store.FindAllLinks(); err == nil {
+	if links, err := getAllLinks(store); err == nil {
 		assert.Equal(1, len(links), "should create a link")
 		assert.Equal(links[0].URL.String(), url,
 			"should populate link with supplied url")
@@ -70,7 +70,7 @@ func AddWithoutTitle(path string, store links.Store, t *testing.T) {
 		"--skip-title-fetch",
 	})
 
-	if links, err := store.FindAllLinks(); err == nil {
+	if links, err := getAllLinks(store); err == nil {
 		assert.Equal(len(links), 1, "Should create a link")
 		assert.Equal(links[0].URL.String(), url, "Should populare url")
 		assert.Empty(links[0].Title)
@@ -90,7 +90,7 @@ func AddWithCustomTitle(path string, store links.Store, t *testing.T) {
 		"-t", title,
 	})
 
-	if links, err := store.FindAllLinks(); err == nil {
+	if links, err := getAllLinks(store); err == nil {
 		assert.Equal(len(links), 1, "Should create a link")
 		assert.Equal(links[0].URL.String(), url, "Should populare ULR")
 		assert.Equal(links[0].Title, title, "Should use provided title")
@@ -112,7 +112,7 @@ func AddNoDuplcatesByDef(path string, store links.Store, t *testing.T) {
 		"--skip-title-fetch", //make it faster
 	})
 
-	if links, err := store.FindAllLinks(); err == nil {
+	if links, err := getAllLinks(store); err == nil {
 		assert.Equal(1, len(links), "Should create one link")
 	} else {
 		t.Error(err)
@@ -136,11 +136,17 @@ func AddForceDuplicate(path string, store links.Store, t *testing.T) {
 		"--force",
 	})
 
-	if links, err := store.FindAllLinks(); err == nil {
+	if links, err := getAllLinks(store); err == nil {
 		assert.Equal(2, len(links), "Should create two links")
 	} else {
 		t.Error(err)
 	}
+}
+
+func getAllLinks(store links.Store) ([]links.Link, error) {
+	return store.FindLinks(links.NewFilter(
+		links.IncludeArchived(),
+	))
 }
 
 func getName(c testCase) string {
