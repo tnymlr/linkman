@@ -10,6 +10,7 @@ import (
 	"github.com/asdine/storm/q"
 )
 
+//Link holds all the data associated with stored URL in the database.
 type Link struct {
 	ID       int `storm:"id,increment"`
 	URL      *url.URL
@@ -19,25 +20,29 @@ type Link struct {
 	Archived bool
 }
 
+//Store provides access to storage of Links.
 type Store interface {
 	NewLink(url *url.URL, source string, title string, list string) *Link
 	SaveLink(link *Link) error
 	LinkExists(url *url.URL) (bool, error)
 	FindLinks(LinkFilter) ([]Link, error)
-	ArchiveById(id int) error
+	ArchiveByID(id int) error
 }
 
+//OpenStore creates new Store for database located
+//at provided path.
 func OpenStore(path string) (Store, error) {
-	if db, err := db.Open(path); err == nil {
-		defer db.Close()
-		if err := initDatabase(db); err == nil {
-			return &storeImpl{path: path}, nil
-		} else {
-			return nil, err
-		}
-	} else {
+	db, err := db.Open(path)
+	if err != nil {
 		return nil, err
 	}
+
+	defer db.Close()
+	if err := initDatabase(db); err != nil {
+		return nil, err
+	}
+
+	return &storeImpl{path: path}, nil
 }
 
 type storeImpl struct {
@@ -60,47 +65,53 @@ func (me *storeImpl) NewLink(url *url.URL, source string, title string, list str
 }
 
 func (me *storeImpl) SaveLink(link *Link) error {
-	if db, err := db.Open(me.path); err == nil {
-		defer db.Close()
-		return save(db, link)
-	} else {
+	db, err := db.Open(me.path)
+	if err != nil {
 		return fmt.Errorf("Unable to open database: %s", err)
 	}
+
+	defer db.Close()
+	return save(db, link)
 }
 
 func (me *storeImpl) LinkExists(url *url.URL) (bool, error) {
-	if db, err := db.Open(me.path); err == nil {
-		defer db.Close()
-		links, err := findLinksByUrl(db, url)
-		return len(links) > 0, err
-	} else {
+	db, err := db.Open(me.path)
+	if err != nil {
 		return false, err
 	}
+
+	defer db.Close()
+	links, err := findLinksByURL(db, url)
+	return len(links) > 0, err
 }
 
 func (me *storeImpl) FindLinks(filter LinkFilter) ([]Link, error) {
-	if db, err := db.Open(me.path); err == nil {
-		return findLinks(db, filter)
-	} else {
+	db, err := db.Open(me.path)
+	if err != nil {
 		return nil, err
 	}
+
+	return findLinks(db, filter)
 }
 
-func (me *storeImpl) ArchiveById(id int) error {
-	if db, err := db.Open(me.path); err == nil {
-		defer db.Close()
-		return archiveById(db, id)
-	} else {
+//ArchiveByID archived the links with specified id.
+func (me *storeImpl) ArchiveByID(id int) error {
+	db, err := db.Open(me.path)
+	if err == nil {
 		return err
 	}
+
+	defer db.Close()
+	return archiveByID(db, id)
 }
 
 func initDatabase(db *storm.DB) error {
-	if err := db.Init(&Link{}); err != nil {
+	err := db.Init(&Link{})
+	if err != nil {
 		return err
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 func findLinks(db *storm.DB, filter LinkFilter) ([]Link, error) {
@@ -126,9 +137,9 @@ func findLinks(db *storm.DB, filter LinkFilter) ([]Link, error) {
 		matchers = append(matchers, q.Eq("List", list))
 	}
 
-	if filter.getArchivedFlag() == only_archived {
+	if filter.getArchivedFlag() == onlyArchived {
 		matchers = append(matchers, q.Eq("Archived", true))
-	} else if filter.getArchivedFlag() == no_archived {
+	} else if filter.getArchivedFlag() == noArchived {
 		matchers = append(matchers, q.Eq("Archived", false))
 	}
 
@@ -141,7 +152,7 @@ func findLinks(db *storm.DB, filter LinkFilter) ([]Link, error) {
 	}
 }
 
-func findLinksByUrl(db *storm.DB, url *url.URL) ([]Link, error) {
+func findLinksByURL(db *storm.DB, url *url.URL) ([]Link, error) {
 	var links []Link
 	err := db.Find("URL", url, &links)
 
@@ -152,22 +163,20 @@ func findLinksByUrl(db *storm.DB, url *url.URL) ([]Link, error) {
 	return links, err
 }
 
-func archiveById(db *storm.DB, id int) error {
-	if err := db.UpdateField(&Link{ID: id}, "Archived", true); err != nil {
-		if err == storm.ErrNotFound {
-			return nil
-		} else {
-			return err
-		}
+func archiveByID(db *storm.DB, id int) error {
+	err := db.UpdateField(&Link{ID: id}, "Archived", true)
+	if err != nil && err != storm.ErrNotFound {
+		return err
 	}
 
 	return nil
 }
 
 func save(db *storm.DB, link *Link) error {
-	if err := db.Save(link); err != nil {
+	err := db.Save(link)
+	if err != nil {
 		return fmt.Errorf("Unable to save link: %s", err)
-	} else {
-		return nil
 	}
+
+	return nil
 }

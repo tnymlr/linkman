@@ -7,43 +7,52 @@ import (
 	tld "golang.org/x/net/publicsuffix"
 )
 
+//GetSource calculates Source value for provided url.
+//Source value is second (or third level) domain name.
+//For example:
+//| link              | source        |
+//| ----              | ------        |
+//| youtube.com       | youtube       |
+//| stackoverflow.com | stackoverflow |
+//| domain.co.uk      | domain        |
 func GetSource(url *url.URL) (string, error) {
 	msg := "Unable to create source string: %"
 
 	if err := validate(url); err != nil {
 		return "", fmt.Errorf(msg, err)
-	} else {
-		return extractSource(url.Hostname(), msg)
 	}
+
+	return extractSource(url.Hostname(), msg)
 }
 
-func ParseUrl(rawurl string) (*url.URL, error) {
+//ParseURL parses provided rawurl string into actual URL object.
+func ParseURL(rawurl string) (*url.URL, error) {
 	url, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
-	} else {
-		return url, validate(url)
 	}
+
+	return url, validate(url)
 }
 
 func extractSource(hostname string, errMsg string) (string, error) {
-	if tldPlusOne, err := tld.EffectiveTLDPlusOne(hostname); err == nil {
-		suffix, _ := tld.PublicSuffix(tldPlusOne)
-		return tldPlusOne[:len(tldPlusOne)-len(suffix)-1], nil
-	} else {
+	tldPlusOne, err := tld.EffectiveTLDPlusOne(hostname)
+	if err != nil {
 		return "", fmt.Errorf(errMsg, err)
 	}
 
+	suffix, _ := tld.PublicSuffix(tldPlusOne)
+	return tldPlusOne[:len(tldPlusOne)-len(suffix)-1], nil
 }
 
-func validate(subjectUrl *url.URL) error {
+func validate(subjectURL *url.URL) error {
 	var err error
 	validators := []func(*url.URL) error{
 		validateHost,
 	}
 
 	for _, v := range validators {
-		err = v(subjectUrl)
+		err = v(subjectURL)
 		if err != nil {
 			return err
 		}
@@ -55,7 +64,7 @@ func validate(subjectUrl *url.URL) error {
 func validateHost(url *url.URL) error {
 	if url.Host == "" || url.Hostname() == "" {
 		return fmt.Errorf("Unexpected URL: missing hostname")
-	} else {
-		return nil
 	}
+
+	return nil
 }

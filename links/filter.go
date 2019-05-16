@@ -1,7 +1,12 @@
 package links
 
+//FilterCondition is a function that modifies
+//LinkFilter to filter out certain links.
 type FilterCondition func(*linkFilter) *linkFilter
 
+//LinkFilter represents a filtering configuration for links.
+//Such a filtering configuration is a result of combination
+//of several FilterConditions
 type LinkFilter interface {
 	hasSource() bool
 	hasTitle() bool
@@ -14,6 +19,7 @@ type LinkFilter interface {
 	getArchivedFlag() archivedFlag
 }
 
+//NewFilter creates new filter with specified conditions.
 func NewFilter(conditions ...FilterCondition) LinkFilter {
 	filter := &linkFilter{}
 
@@ -24,6 +30,9 @@ func NewFilter(conditions ...FilterCondition) LinkFilter {
 	return filter
 }
 
+//WithSource creates new filtering condition for Source field.
+//This filtering conditions allows only links which
+//Source field matches provided source string.
 func WithSource(source string) FilterCondition {
 	return func(filter *linkFilter) *linkFilter {
 		filter.source = source
@@ -31,6 +40,9 @@ func WithSource(source string) FilterCondition {
 	}
 }
 
+//WithTitle creates new filtering condition for Title field.
+//This filtering condition allows only links which
+//Title field contains provided title string.
 func WithTitle(title string) FilterCondition {
 	return func(filter *linkFilter) *linkFilter {
 		filter.title = title
@@ -38,6 +50,9 @@ func WithTitle(title string) FilterCondition {
 	}
 }
 
+//FromList creates new filtering condition for List field.
+//This filtering condition allows only links which
+//List field matches provided filter string.
 func FromList(list string) FilterCondition {
 	return func(filter *linkFilter) *linkFilter {
 		filter.list = list
@@ -45,6 +60,9 @@ func FromList(list string) FilterCondition {
 	}
 }
 
+//TitleNotEmpty creates new filtering condition for Title field.
+//This filtering condition allows only links which
+//Title field is not empty.
 func TitleNotEmpty() FilterCondition {
 	return func(filter *linkFilter) *linkFilter {
 		filter.requireTitle = true
@@ -52,24 +70,33 @@ func TitleNotEmpty() FilterCondition {
 	}
 }
 
+//IncludeArchived creates new filtering condition for Archived field.
+//This filtering condition allows links which have either true or false
+//value written into Archived field.
 func IncludeArchived() FilterCondition {
-	return archivedBuilder(include_archived)
+	return archivedBuilder(includeArchived)
 }
 
+//OnlyArchived creates new filtering condition for Archived field.
+//This filtering condition only allows links that have true
+//value written into Archived field.
 func OnlyArchived() FilterCondition {
-	return archivedBuilder(only_archived)
+	return archivedBuilder(onlyArchived)
 }
 
+//NoArchived creates new filtering condition for Archived field.
+//This filtering condition only allows links that have false
+//value written into Archived field.
 func NoArchived() FilterCondition {
-	return archivedBuilder(no_archived)
+	return archivedBuilder(noArchived)
 }
 
 type archivedFlag int
 
 const ( // archived flags
-	include_archived = iota + 1
-	only_archived
-	no_archived
+	includeArchived = iota + 1
+	onlyArchived
+	noArchived
 )
 
 type linkFilter struct {
@@ -103,9 +130,9 @@ func (me *linkFilter) getTitle() string {
 func (me *linkFilter) getList() string {
 	if me.list == "" {
 		return "default"
-	} else {
-		return me.list
 	}
+
+	return me.list
 }
 
 func (me *linkFilter) getArchivedFlag() archivedFlag {
@@ -117,8 +144,8 @@ func archivedBuilder(flag archivedFlag) FilterCondition {
 		if filter.archived == 0 {
 			filter.archived = flag
 			return filter
-		} else {
-			panic("archived filter can be applied only once")
 		}
+
+		panic("archived filter can be applied only once")
 	}
 }

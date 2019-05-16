@@ -9,25 +9,29 @@ import (
 	"golang.org/x/net/html"
 )
 
+//FetchTitle retrives the title for a webpage located at specified URL.
 func FetchTitle(url *url.URL) (string, error) {
-	if resp, err := http.Get(url.String()); err == nil {
-		defer resp.Body.Close()
-		return getHtmlTitle(resp.Body)
-	} else {
+	resp, err := http.Get(url.String())
+	if err != nil {
 		return "", fmt.Errorf("Unable to fetch web page: %s", err)
 	}
+
+	defer resp.Body.Close()
+	return getHTMLTitle(resp.Body)
 }
 
-func getHtmlTitle(r io.Reader) (string, error) {
-	if doc, err := html.Parse(r); err == nil {
-		if result, ok := traverse(doc); ok {
-			return result, nil
-		} else {
-			return result, fmt.Errorf("Unable to find title tag")
-		}
-	} else {
+func getHTMLTitle(r io.Reader) (string, error) {
+	doc, err := html.Parse(r)
+	if err != nil {
 		return "", fmt.Errorf("Unable to parse HTML: %s", err)
 	}
+
+	result, ok := traverse(doc)
+	if !ok {
+		return result, fmt.Errorf("Unable to find title tag")
+	}
+
+	return result, nil
 }
 
 func isTitleElement(n *html.Node) bool {

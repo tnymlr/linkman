@@ -42,6 +42,9 @@ Examples on how source is calculated:
 
 var dataPath string
 
+//Execute is the entry point into the application.
+//It configures and starts the execute of root command
+//which in turn passes the execution to underying commands.
 func Execute(path string, args []string) {
 	dataPath = path
 	rootCmd.SetArgs(args)

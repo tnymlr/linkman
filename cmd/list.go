@@ -55,21 +55,21 @@ list of "id: source" lines
 	Run: runList,
 }
 
-const DEFAULT_TEMPLATE = `
+const defaultTemplate = `
 ID:	{{.ID}}
 Source:	{{.Source}}
 Title:	{{.Title}}
 URL:	{{.URL}}
 `
 
-var format string = DEFAULT_TEMPLATE
-var source string = ""
-var list string = ""
-var title string = ""
+var format = defaultTemplate
+var source = ""
+var list = ""
+var title = ""
 
-var requireTitle bool = false
-var archived bool = false
-var onlyArchived bool = false
+var requireTitle = false
+var archived = false
+var onlyArchived = false
 
 func runList(cmd *cobra.Command, args []string) {
 	writer := getOutputWriter()
@@ -83,12 +83,12 @@ func runList(cmd *cobra.Command, args []string) {
 }
 
 func openLinksStore(path string) links.Store {
-	if store, err := links.OpenStore(path); err == nil {
+	store, err := links.OpenStore(path)
+	if err == nil {
 		return store
-	} else {
-		die("Unable to open links store", err)
 	}
 
+	die("Unable to open links store", err)
 	panic("Shouldn't get there")
 }
 
@@ -125,12 +125,12 @@ func getLinks(store links.Store) []links.Link {
 
 	filter := links.NewFilter(conds...)
 
-	if links, err := store.FindLinks(filter); err == nil {
+	links, err := store.FindLinks(filter)
+	if err == nil {
 		return links
-	} else {
-		die("Unable to fetch links", err)
 	}
 
+	die("Unable to fetch links", err)
 	panic("Shouldn't get there")
 }
 
@@ -138,12 +138,12 @@ func getOutputTemplate() *template.Template {
 	tpl := template.New("output template")
 	format := unescapeOutputTemplate(format)
 
-	if tpl, err := tpl.Parse(format); err == nil {
+	tpl, err := tpl.Parse(format)
+	if err == nil {
 		return tpl
-	} else {
-		die("Unable to parse output template", err)
 	}
 
+	die("Unable to parse output template", err)
 	panic("Shouldn't get there")
 }
 
@@ -151,12 +151,12 @@ func unescapeOutputTemplate(format string) string {
 	quoted := strconv.Quote(format)
 	replaced := strings.Replace(quoted, `\\`, "\\", -1)
 
-	if result, err := strconv.Unquote(replaced); err == nil {
+	result, err := strconv.Unquote(replaced)
+	if err == nil {
 		return result
-	} else {
-		die("Unable to parse output template", err)
 	}
 
+	die("Unable to parse output template", err)
 	panic("Shouldn't get there")
 }
 
@@ -174,7 +174,7 @@ func init() {
 
 	listCmd.Flags().StringVarP(&format,
 		"format", "f",
-		DEFAULT_TEMPLATE,
+		defaultTemplate,
 		"Output template. Available fields are: ID, URL, Source, Title,List")
 
 	listCmd.Flags().StringVarP(&source,

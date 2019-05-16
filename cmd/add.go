@@ -27,51 +27,51 @@ had links created for them.
 	Run:  runAdd,
 }
 
-var skipFetchingTitle bool = false
-var allowDuplicates bool = false
-var targetList string = "default"
-var providedTitle string = ""
+var skipFetchingTitle = false
+var allowDuplicates = false
+var targetList = "default"
+var providedTitle = ""
 
 func runAdd(cmd *cobra.Command, args []string) {
 	if store, err := links.OpenStore(dataPath); err == nil {
 		for _, rawurl := range args {
-			saveRawUrl(store, rawurl)
+			saveRawURL(store, rawurl)
 		}
 	} else {
 		die("Unable to open links store", err)
 	}
 }
 
-func saveRawUrl(store links.Store, rawurl string) {
-	url := parseUrl(rawurl)
+func saveRawURL(store links.Store, rawurl string) {
+	url := parseURL(rawurl)
 	if allowDuplicates || !urlExists(store, url) {
-		saveUrl(store, url)
+		saveURL(store, url)
 	} else {
 		fmt.Printf("URL %s already exists, skipping\n", rawurl)
 	}
 }
 
-func parseUrl(rawurl string) *url.URL {
-	if url, err := urls.ParseUrl(rawurl); err == nil {
+func parseURL(rawurl string) *url.URL {
+	url, err := urls.ParseURL(rawurl)
+	if err == nil {
 		return url
-	} else {
-		die("Unable to add URL", err)
 	}
 
+	die("Unable to add URL", err)
 	panic("shouldn't get here")
 }
 
 func urlExists(store links.Store, url *url.URL) bool {
-	if exists, err := store.LinkExists(url); err == nil {
+	exists, err := store.LinkExists(url)
+	if err == nil {
 		return exists
-	} else {
-		die("Unexpected error", err)
 	}
 
+	die("Unexpected error", err)
 	panic("shouldn't get there")
 }
 
-func saveUrl(store links.Store, url *url.URL) {
+func saveURL(store links.Store, url *url.URL) {
 	source := getSource(url)
 	title := fetchTitle(url)
 	link := store.NewLink(url, source, title, targetList)
@@ -86,12 +86,12 @@ func saveUrl(store links.Store, url *url.URL) {
 }
 
 func getSource(url *url.URL) string {
-	if source, err := urls.GetSource(url); err == nil {
+	source, err := urls.GetSource(url)
+	if err == nil {
 		return source
-	} else {
-		die("Mailformed URL", err)
 	}
 
+	die("Mailformed URL", err)
 	panic("shouldn't get here")
 }
 

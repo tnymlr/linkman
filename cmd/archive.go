@@ -34,17 +34,17 @@ linkman archive id
 }
 
 func openStore(path string) links.Store {
-	if store, err := links.OpenStore(path); err == nil {
+	store, err := links.OpenStore(path)
+	if err == nil {
 		return store
-	} else {
-		die("Unable to open store", err)
 	}
 
+	die("Unable to open store", err)
 	panic("shouldn't get there")
 }
 
 func archiveLink(store links.Store, id int) {
-	if err := store.ArchiveById(id); err != nil {
+	if err := store.ArchiveByID(id); err != nil {
 		die("Unable to archive link", err)
 	}
 }
