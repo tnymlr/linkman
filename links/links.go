@@ -97,7 +97,7 @@ func (me *storeImpl) FindLinks(filter LinkFilter) ([]Link, error) {
 //ArchiveByID archived the links with specified id.
 func (me *storeImpl) ArchiveByID(id int) error {
 	db, err := db.Open(me.path)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 
@@ -165,7 +165,7 @@ func findLinksByURL(db *storm.DB, url *url.URL) ([]Link, error) {
 
 func archiveByID(db *storm.DB, id int) error {
 	err := db.UpdateField(&Link{ID: id}, "Archived", true)
-	if err != nil && err != storm.ErrNotFound {
+	if err != nil {
 		return err
 	}
 

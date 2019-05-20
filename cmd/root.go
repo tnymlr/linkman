@@ -55,7 +55,7 @@ func Execute(path string, args []string) {
 }
 
 func die(msg string, err error) {
-	fmt.Fprintln(os.Stderr, fmt.Errorf("%s: %s", msg, err))
+	fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: %s", msg, err))
 	os.Exit(1)
 }
 
