@@ -45,8 +45,8 @@ $ linkman add http://url1.example.com http://url2.example.com
 By default, linkman will go and fetch the webpages for supplied URLs
 and store their titles alongside the URLs and does not allow for duplicates.
 
-Additionally, linkman calculates "source" of the supplied URLs, that is
-second or third level domain name:
+Additionally, linkman calculates and stores "source" of the supplied URLs,
+that is second or third (depending on TLD) level domain name:
 
 | url               | source        |
 | ----              | ----          |
@@ -65,7 +65,7 @@ second or third level domain name:
 **Example**
 
 With [newsboat](https://newsboat.org/) one can use this command to store
-rss articles into "reading" list:
+RSS articles into "reading" list:
 
 ```
 $ linkman add -l "reading" --skip-title-fetch -t "$title" "$url"
@@ -88,19 +88,19 @@ Title:  GitHub - asdine/storm: Simple and powerful toolkit for BoltDB
 URL:    https://github.com/asdine/storm#update-an-object
 ```
 
-`list` command supports multiple that allow to:
+`list` command supports multiple options that allow to:
 
  - include archived bookmarks: `-a`, `--archived`
  - specify output format: `-f`, `--format`
- - show bookmarks from provided list: `-l`, `--list`
+ - show bookmarks from the specified list: `-l`, `--list`
  - show *only* archvied bookmarks: `-A`, `--only-archived`
- - filter out bookmarks that have not title: `-T`, `--require-title`
- - show *only* bookmarks from specified source: `-s`, `--source`
+ - filter out bookmarks that have no title: `-T`, `--require-title`
+ - show *only* bookmarks from the specified source: `-s`, `--source`
  - show *only* bookmarks which title contains specified string: 
    `-t`, `--title`
 
-Multiple filtering options can be combined. In such case they combined
-using `and` operation:
+`list` allows for multiple filtering options. Whenever multiple filtering
+options are provided, they are combined using `and` operation:
 
 `$ linkman list -l reading -t github` will only show bookmarks from 
 "reading" list that have "github" in the title.
@@ -117,11 +117,11 @@ Each bookmark has several fields that can be specified in output format:
 
  - `ID`, bookmark identificator, assigned automatically on `add`
  - `URL`, the URL itself
- - `Source`, calculated source string (see add command for details)
+ - `Source`, calculated source string (see `add` command for details)
  - `Title`, the title of the webpage behind the URLs
  - `List`, the list that bookmark belongs to
 
-Output format supports special chars from C, like '\n', '\t' and so on.
+Output format supports special chars from C, such as `\n`, `\t` and so on.
 
 **Example**
 
